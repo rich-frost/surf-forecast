@@ -3,17 +3,43 @@ class ObservationsRow extends React.Component {
     return (
       <tr>
         <td>{this.props.obs.time}</td>
-        <td>{this.props.obs.direction}</td>
+        <td>{this.props.obs.D}</td>
+        <td>{this.props.obs.S}</td>
       </tr>
     );
   }
 }
 
 class ObservationsTable extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoading: true
+    };
+  }
+
+  componentDidMount() {
+    fetch('http://datapoint.metoffice.gov.uk/public/data/val/wxobs/all/json/3808?res=hourly&key=')
+      .then(response => response.json())
+      .then(data => {
+        let observations = data.SiteRep.DV.Location.Period.reverse()[0].Rep.reverse();
+
+        this.setState({ obs: observations, isLoading: false });
+      });
+  }
+
   render() {
     var rows = [];
-    this.props.obs.forEach(obs => {
-      rows.push(<ObservationsRow obs={obs} />);
+
+    let { isLoading, obs } = this.state;
+
+    if (isLoading) {
+      return <p>Loading ...</p>;
+    }
+
+    obs.forEach(ob => {
+      ob.time = ob.$/60;
+      rows.push(<ObservationsRow obs={ob} />);
     });
     return (
       <table className="table">
@@ -22,6 +48,8 @@ class ObservationsTable extends React.Component {
     );
   }
 }
+
+
 
 var OBS = [
   { time: "18:00", direction: "W" },
